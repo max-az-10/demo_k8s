@@ -1,0 +1,107 @@
+pipeline {
+    agent any
+ 
+    tools {
+        jdk 'jdk17'
+        nodejs 'node24'
+    }
+    
+    environment {
+        SCANNER_HOME = tool 'SonarQube-Scanner'
+    }
+ 
+    stages {
+
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage('Checkout from Git') {
+            steps {
+                git branch: 'main', url: 'https://github.com/max-az-10/demo_k8s.git'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube-Scanner') {
+                    sh """
+                    $SCANNER_HOME/bin/sonar-scanner \
+                    -Dsonar.projectName=demo-pro-CI \
+                    -Dsonar.projectKey=demo-pro-CI
+                    """
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'SonarQube-Token'
+                }
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    sh "npm install"
+                }
+            }
+        }
+
+        stage('Trivy FS Scan') {
+            steps {
+                sh "trivy fs . > trivyfs.txt"
+            }
+        }
+        
+        stage("Docker Build & Push") {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'Dockerhub-Token', toolName: 'docker') {
+                        sh "docker build -t demo-pro ."
+                        sh "docker tag demo-pro max400/demo-dkrepo:latest"
+                        sh "docker push max400/demo-dkrepo:latest"
+                    }
+                }
+            }
+        }
+        
+        stage("TRIVY") {
+            steps {
+                script {
+                    sh "trivy image max400/demo-dkrepo:latest > trivyimage.txt"
+                }
+            }
+        }
+        
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'aws-creds', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                        dir('Kubernetes') {
+                            withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s-token', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
+		                        sh 'kubectl delete --all pods'
+                                sh 'kubectl apply -f deployment.yml'
+                                sh 'kubectl apply -f service.yml'
+                            }
+                        }
+                    }
+                }
+            }
+        }            
+    }
+}
+
+
+
+//Cleanup 
+1--Delete EKS Cluster
+aws eks delete-cluster --name virtualtechbox-cluster --region us-east-1
+
+2--Delete EC2 Instance with below Terraform Command
+terraform destroy
+//
