@@ -1,15 +1,15 @@
 pipeline {
     agent any
- 
+
     tools {
-        jdk 'jdk17'
-        nodejs 'node24'
+        jdk 'jdk21'
+        nodejs 'node20'
     }
-    
+
     environment {
         SCANNER_HOME = tool 'SonarQube-Scanner'
     }
- 
+
     stages {
 
         stage('Clean Workspace') {
@@ -24,9 +24,17 @@ pipeline {
             }
         }
 
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    sh "npm install"
+                }
+            }
+        }
+
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube-Scanner') {
+                withSonarQubeEnv(installationName: 'Sonarqube', credentialsId: 'sonar-token') {
                     sh """
                     $SCANNER_HOME/bin/sonar-scanner \
                     -Dsonar.projectName=demo-pro-CI \
@@ -39,15 +47,7 @@ pipeline {
         stage('Quality Gate') {
             steps {
                 script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'SonarQube-Token'
-                }
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                script {
-                    sh "npm install"
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token'
                 }
             }
         }
@@ -61,7 +61,7 @@ pipeline {
         stage("Docker Build & Push") {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'Dockerhub-Token', toolName: 'docker') {
+                    withDockerRegistry(credentialsId: 'dockerhub-token') {
                         sh "docker build -t demo-pro ."
                         sh "docker tag demo-pro max400/demo-dkrepo:latest"
                         sh "docker push max400/demo-dkrepo:latest"
@@ -69,7 +69,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage("TRIVY") {
             steps {
                 script {
@@ -81,10 +81,10 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'aws-creds', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-token', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                         dir('Kubernetes') {
-                            withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s-token', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
-		                        sh 'kubectl delete --all pods'
+                            withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'kubernetes-token', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
+                                sh 'kubectl delete --all pods'
                                 sh 'kubectl apply -f deployment.yml'
                                 sh 'kubectl apply -f service.yml'
                             }
@@ -92,9 +92,11 @@ pipeline {
                     }
                 }
             }
-        }            
+        }
     }
 }
+
+
 
 
 
