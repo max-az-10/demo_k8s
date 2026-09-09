@@ -5,7 +5,7 @@ metadata:
   labels:
     app: demok8s-app
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   ports:
     - port: 80
       targetPort: 3000
