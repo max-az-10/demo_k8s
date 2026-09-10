@@ -12,7 +12,7 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
-    - host: www.devopswithmax.com
+    - host: devopswithmax.com
       http:
         paths:
           - path: /
