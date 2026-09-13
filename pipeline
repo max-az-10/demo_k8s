@@ -85,6 +85,8 @@ pipeline {
                             withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'kubernetes-token', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
                                 sh 'kubectl apply -f deployment.yml'
                                 sh 'kubectl apply -f service.yml'
+
+                                sh "kubectl set image deployment/demok8s-app demok8s-app=max400/demo-dkrepo:${BUILD_NUMBER}"
                             }
                         }
                     }
