@@ -1,5 +1,5 @@
 # Use Node.js 16 slim as the base image
-FROM node:21
+FROM node:24-alpine
 
 # Set the working directory
 WORKDIR /app
