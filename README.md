@@ -5,7 +5,6 @@ A DevOps project demonstrating the deployment and monitoring of a containerized 
 
 # Architecture
 GitHub → Jenkins → SonarQube → Docker → Docker Hub → AWS EKS → Kubernetes → LoadBalancer
-
 Prometheus collects Kubernetes/application metrics, while Grafana provides dashboards for monitoring and visualization.
 
 # Technologies Used
@@ -23,29 +22,25 @@ Linux
 
 # Infrastructure as Code
 Provisioned AWS infrastructure using Terraform
-
-# Created and managed an AWS EKS cluster
+Created and managed an AWS EKS cluster
 Automated infrastructure deployment and configuration
+Used reusable Terraform configuration to maintain infrastructure consistentl
 
-Used reusable Terraform configuration to maintain infrastructure consistently
-Containerization
-
-# Containerized the application using Docker
+# Containerization
+Containerized the application using Docker
 Created Docker images for application deployment
 Published container images to Docker Hub
-CI/CD Pipeline
 
-# Integrated GitHub with Jenkins
+# CI/CD Pipeline
+Integrated GitHub with Jenkins
 Automated application build and deployment
 Integrated SonarQube for code-quality analysis
 Built and pushed Docker images through the pipeline
-
 Automated deployment to Kubernetes/EKS
-Kubernetes Deployment
 
-# Deployed the application to AWS EKS
+# Kubernetes Deployment
+Deployed the application to AWS EKS
 Created Kubernetes deployment and service resources
-
 Managed application workloads using Kubernetes
 Exposed the application using a LoadBalancer
 
