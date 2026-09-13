@@ -44,4 +44,54 @@ Created Kubernetes deployment and service resources
 Managed application workloads using Kubernetes
 Exposed the application using a LoadBalancer
 
+              WEBHOOK
+                 |
+                 v
++-----------------------------+
+|       GitHub Repository     |
+|   demo_k8s.git              |
++-----------------------------+
+               |
+               |  ---->
+               v
++-----------------------------+
+|      Jenkins EC2 Instance   |
+|                             |
+|  - Pipeline                 |
+|  - SonarQube Scanner        |
+|  - Docker Build             |
+|  - Docker Push              |
++-----------------------------+
+               |
+               |  ----> Docker Image
+               v
++-----------------------------+
+|          Docker Hub         |
+|       Image Registry        |
++-----------------------------+
+               |
+               |  <---- Pull Image
+               v
++----------------------------------+
+|          AWS EKS Cluster         |
+|                                  |
+|   +----------+ +----------+      |
+|   | Worker 1 | | Worker 2 | ...  |
+|   |  Pods    | |  Pods    |      |
+|   +----------+ +----------+      |
+|                                  |
+|       Kubernetes Deployment      |
+|               |                  |
+|               v                  |
+|       Service: LoadBalancer      |
++----------------------------------+
+               |
+               |  ---->
+               v
++-----------------------------+
+|    Live Application         |
+|       in Browser            |
++-----------------------------+
+
+
 # demo_k8s Text 2000
